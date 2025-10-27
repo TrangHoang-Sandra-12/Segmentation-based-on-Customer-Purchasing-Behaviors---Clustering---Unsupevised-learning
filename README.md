@@ -1,1 +1,142 @@
-# Unsupervised-learning
+🧩 Segmentation Based on Customer Purchasing Behaviors
+
+Author: Trang Hoang
+Language: R
+RPubs Report: http://rpubs.com/Trang_Hoang/1262509
+
+📘 Overview
+
+This project applies multiple unsupervised learning techniques to segment customers based on purchasing behavior.
+By comparing algorithms such as K-Means, PAM, CLARA, and Hierarchical Clustering, the goal is to determine which method best captures natural customer groupings for actionable business insights.
+
+🎯 Objectives
+
+Explore the clusterability of customer purchasing data
+
+Compare clustering algorithms (K-Means, PAM, CLARA, Hierarchical)
+
+Evaluate models using silhouette scores and cluster interpretability
+
+Identify the most meaningful and stable customer segments
+
+📊 Dataset
+
+The dataset used is sourced from Kaggle – Customer Purchasing Behaviors
+, which includes customer-level attributes such as:
+
+| Variable       | Description                      |
+| -------------- | -------------------------------- |
+| `Budget`       | Monthly spending limit           |
+| `Frequency`    | Purchase frequency               |
+| `Demographics` | Age, gender, or customer profile |
+| `Income`       | Annual income                    |
+| `Loyalty`      | Customer loyalty score           |
+
+
+⚙️ Methodology
+🔹 1. Data Preparation
+
+Imported and cleaned customer data (Customer Purchasing Behaviors.csv)
+
+Scaled all numeric variables for consistent distance calculations
+
+Conducted correlation analysis to understand feature relationships
+
+Key Observations:
+
+High correlation (≥ 0.97) between variables like purchase frequency, income, and loyalty
+
+Customers with higher income tend to spend and shop more frequently
+
+All features are interrelated, suggesting no independent variables
+
+🔹 2. Prediagnostics
+
+Hopkins Statistic = 0.9358, indicating strong clustering tendency
+
+Determined the optimal number of clusters using silhouette scores across algorithms:
+
+K-Means → ~9 clusters
+
+PAM → 6 clusters
+
+CLARA → 5 clusters
+
+Hierarchical → 5 clusters
+
+🔹 3. Algorithms Compared
+🟦 K-Means
+
+Tested with Euclidean and Pearson distance metrics
+
+Euclidean: more distinct separation, avg silhouette = 0.56
+
+Pearson: more overlap, avg silhouette = 0.63
+
+🟩 PAM (Partitioning Around Medoids)
+
+Optimal clusters = 6
+
+Clear separation, robust against outliers
+
+Performs better than K-Means for overlapping clusters
+
+🟧 CLARA (Clustering Large Applications)
+
+Extension of PAM for large datasets
+
+Merged similar clusters to improve cohesion
+
+Best silhouette score = 0.64
+
+🟪 Hierarchical Clustering
+
+Built dendrogram using complete linkage
+
+Achieved high-quality separation (Q ≈ 1)
+
+Provides interpretability of relationships between clusters
+
+Slightly lower silhouette = 0.61
+
+📈 Results Summary
+
+| Algorithm    | Optimal k | Silhouette Score | Remarks                          |
+| ------------ | --------- | ---------------- | -------------------------------- |
+| K-Means      | 9         | 0.56–0.63        | Clear but overlapping clusters   |
+| PAM          | 6         | 0.63             | Balanced and distinct clusters   |
+| CLARA        | 5         | **0.64**         | Best performance overall         |
+| Hierarchical | 5         | 0.61             | Good structure, useful hierarchy |
+
+
+Conclusion:
+
+The best-performing algorithms are CLARA and PAM, both achieving high silhouette scores and strong cluster cohesion.
+Hierarchical clustering, though slightly lower in score, provides valuable insights into inter-cluster relationships.
+
+🧰 Tools & Libraries
+
+R Libraries:
+corrplot, clustertend, factoextra, NbClust, ggplot2, cluster, gridExtra, proxy, ClustGeo
+
+Environment: RStudio
+
+Techniques:
+
+Data normalization
+
+Correlation heatmaps
+
+Hopkins test for cluster tendency
+
+Silhouette and dendrogram visualization
+
+
+👩‍💻 Author
+
+Trang Hoang
+Master’s Student in Data Science & Business Analytics, University of Warsaw
+Formerly @ MoMo E-Wallet, Shopee Vietnam, NielsenIQ
+📫 trangphuong83p@gmail.com
+
+🌐 RPubs Portfolio: https://rpubs.com/Trang_Hoang
