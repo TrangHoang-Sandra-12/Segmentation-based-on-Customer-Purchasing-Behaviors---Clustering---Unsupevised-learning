@@ -1,0 +1,269 @@
+---
+title: "Segmentation based on Customer Purchasing Behaviors"
+author: "Trang Hoang"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+    number_sections: false
+    theme: spacelab
+  pdf_document:
+    toc: true
+    toc_depth: '5'
+---
+
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cran.r-project.org"))
+```
+
+# Introduction
+
+Clustering is an important unsupervised machine learning technique in which data points are grouped into clusters so that points within the same cluster have similar features, while points in different clusters are different. There are a variety of applications, including customer segmentation, image analysis, anomaly detection, gene or protein classification and data compression. Popular algorithms include K-Means, which is suitable for simple, spherical clusters, Hierarchical Clustering, which creates dendrograms using agglomerative or divisive methods, DBSCAN, which is suitable for complex clusters and outliers, Gaussian Mixture Models, ideal for overlapping clusters, and Spectral Clustering, which is suitable for data with complicated structures. Each algorithm offers unique advantages depending on the data and the objectives.
+
+In this research, I will attempt to determine which method is best suited for the customer purchase behavior dataset so that customers can be segmented in an effective manner.
+
+# Data Preparation
+
+The dataset used for this analysis is Customer Purchasing Behaviors.cvs, which contains information about customer behavior including: budget, frequency, demographics, income, loyalty, provided by Kaggle (<https://www.kaggle.com/datasets/hanaksoy/customer-purchasing-behaviors>)
+
+```{r}
+# Packages & Libraries
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(corrplot,clustertend,factoextra,NbClust,ggplot2,cluster,gridExtra,proxy,ClustGeo)
+```
+
+```{r}
+# Import dataset
+```
+
+```{r, echo = FALSE}
+setwd("/Users/phuongtrang/Documents/Study/1st semester/Unsupervised Learning/Final project/Dataset")
+```
+
+```{r}
+data<-read.csv("Customer Purchasing Behaviors.csv", sep=",", dec=".", header=TRUE) 
+data <- as.matrix(data[,c(2:5,7)]) #data only
+head(data)
+
+```
+
+```{r}
+# Checking data
+dim(data)
+summary(data)
+
+```
+
+```{r}
+# As data in different scale, so I'll nomalize them by using scale()
+data <- scale(data,scale = T)
+# Check the relationship among variables
+corrplot(cor(data), method = "number", number.cex = 0.7, order="hclust")
+```
+
+High correlation (close to 1) between the variables:
+
+Most variables have very high correlation coefficients (≥ 0.97), indicating a strong relationship between them.
+
+-   Purchase amount and purchase frequency: correlation of 0.99, which means that customers who shop more often also spend more.
+-   Annual income and purchase amount: correlation of 0.98, which means that customers with higher incomes tend to spend more.
+-   Correlation between age and other variables: Age correlates strongly with variables such as annual income (0.97), purchase frequency (0.98) and loyalty score (0.98).This indicates that older customers tend to have a higher income, shop more frequently and are more loyal.
+
+Non-existent independent variables:None of the variables are completely isolated from the others. All variables are highly correlated, indicating that they are not independent.
+
+# Prediagnostics
+
+I will first perform a preliminary diagnosis to check whether the data can be clustered and to choose the optimal number of clusters.
+
+To assess the clusterability of the data, I will perform the Hopkins statistic. The null hypothesis states that the data set is uniformly distributed and contains no meaningful clusters.
+
+```{r}
+get_clust_tendency(data, 2, graph=TRUE, gradient=list(low="red", mid="white", high="blue"))
+```
+
+With a Hopkins statistic of 0.9358179, the results strongly indicate that the data contains meaningful clusters. Next, I will determine the optimal number of clusters using four methods: K-means, PAM, CLARA, and hierarchical clustering, based on the silhouette score.
+
+```{r}
+c1 <- fviz_nbclust(data, kmeans, method = "s") + ggtitle("Kmeans")
+c2 <- fviz_nbclust(data, cluster::pam, method = "s") + ggtitle("PAM")
+c3 <- fviz_nbclust(data,cluster::clara, method = "s") + ggtitle("Clara")
+c4 <- fviz_nbclust(data, hcut, method = "s") + ggtitle("Hierarchical")
+
+grid.arrange(c1, c2, c3, c4, ncol=2, top = "Optimal number of clusters")
+```
+
+#### K-means:
+
+Optimal number of clusters: about 9, with the average silhouette value being high. K-means shows good clustering ability, but the silhouette does not change significantly after k = 5.
+
+#### PAM:
+
+Optimal number of clusters: 6, with the highest silhouette width. PAM performs well with a smaller number of clusters than K-means, reflecting its flexibility in dealing with heterogeneous data.
+
+#### CLARA:
+
+Optimal number of clusters: 5, where the silhouette reaches its highest value. This method works well, especially with large amounts of data, and maintains a stable silhouette value from k = 5.
+
+#### Hierarchical clustering:
+
+Optimal number of clusters: 5, where the silhouette peaks. Remarks: Hierarchical clustering is suitable for data with complex structures and is stable as the number of clusters increases.
+
+Generally, optimal number of clusters: PAM, CLARA and Hierarchical Clustering all suggest that the optimal number of clusters is 5 or 6. K-means tends to be optimal at 9 clusters, but is not significantly different from lower cluster counts.
+
+# K-means
+
+The k-means algorithm is a popular clustering technique used to group data points into a fixed number (k) of clusters based on their similarities. It is an unsupervised machine learning algorithm and works iteratively to partition a dataset into clusters, aiming to minimize the variance (or distance) within each cluster.
+
+```{r}
+# clustering of dataset – by individual obs. (in rows)
+```
+
+```{r}
+km1<-eclust(data, "kmeans", hc_metric="euclidean",k=9)
+fviz_cluster(km1, main="kmeans / Euclidean")
+sil<-silhouette(km1$cluster, dist(data))
+fviz_silhouette(sil)
+
+
+```
+
+```{r}
+
+# Calculate Pearson distance matrix (1 - correlation)
+pearson_dist <- as.dist(1 - cor(t(data), method = "pearson"))
+
+# K-means clustering based on Pearson distance
+km2 <- kmeans(pearson_dist, centers = 9)
+
+# Visualization
+fviz_cluster(list(data = data, cluster = km2$cluster), main = "Kmeans / Pearson")
+sil2 <- silhouette(km2$cluster, pearson_dist)
+fviz_silhouette(sil2)
+
+```
+
+#### Euclidean distance: 
+In this method, the focus is on the absolute distance between the data points, so the clusters are analyzed based on the differences between the regimes in space.
+
+-   The graph for the clusters can be seen more clearly.
+-   Cluster 6 is unique compared to the other clusters and shows a large difference in the geometric distance between the data in space.
+-   Other clusters, such as clusters 2, 3 and 5, still have distinct distances, although they are closer to each other.
+
+#### Pearson correlation:
+The focus is on the linear relationships between the variables, so data with high correlations are grouped in the same cluster
+
+-   Clusters closer to the center (clusters 3, 4, 5, 7) tend to overlap more than the Euclidean distance, which means that the distance between the clusters is not as large.
+-   Cluster 6 is still separated, but still have some overlap in their positions to cluster 2, which can make it difficult to determine cluster boundaries.
+
+#### Conclusion: 
+Pearson's correlation: The average silhouette width is (0.63), but the clusters have a clear overlap. Euclidean distance: The average silhouette width is smaller (0.56), but the clusters are more clearly separated from each other.
+
+# PAM
+
+PAM (Partitioning Around Medoids) algorithm clusters data around medoids, which are actual data points from the dataset, unlike the k-means algorithm, which clusters data around centroids that may not correspond to actual points in the dataset.
+
+```{r}
+pam1<-eclust(data, "pam", k=6, hc_metric="euclidean")
+fviz_silhouette(pam1)
+
+
+```
+
+```{r}
+pam2<-eclust(data, "pam", k=6, hc_metric="Manhatta")
+fviz_silhouette(pam2)
+
+```
+
+```{r}
+pam3<-eclust(data, "pam", k=6, hc_metric="pearson")
+fviz_silhouette(pam3)
+
+```
+
+The clustering results are similar for Euclidean distance, Manhattan distance and Pearson's correlation The clusters are mostly distinct and well-separated. Cluster 4 is noticeably distinct from the other clusters, suggesting strong separation. Conclusion: PAM provides better separation compared to K-Means, especially around overlapping clusters.
+
+# CLARA
+
+CLARA (Clustering Large Applications) is an extension of the PAM (Partitioning Around Medoids) algorithm designed to handle large datasets efficiently. While PAM works well for smaller datasets, it becomes computationally expensive for larger datasets because it calculates all pairwise distances.
+
+```{r}
+cl<-eclust(data, "clara", k=5) 
+fviz_silhouette(cl)
+
+```
+
+-   CLARA merges what PAM separates into two clusters. Specifically, the blue cluster (Cluster 4 in PAM) appears merged into another cluster in CLARA.
+-   Clusters are relatively well-separated
+-   CLARA seems to prioritize compactness and simpler structure for larger datasets. However, it may lose some finer separation that PAM achieves, particularly in datasets where the additional cluster (Cluster 6 in PAM) adds valuable distinctions.
+
+####Conclusion: 
+Although CLARA merges two clusters (as observed visually), the silhouette score improvement suggests that this merging leads to a more cohesive representation of the dataset. In contrast, PAM’s additional cluster (Cluster 6) may introduce slight redundancy or noise, reducing the overall silhouette width.
+
+# Hierarchical clustering:
+
+Hierarchical clustering is a method of cluster analysis that seeks to build a hierarchy of clusters. It is an unsupervised machine learning technique used to group similar data points into clusters based on their similarity or distance from one another. The result of hierarchical clustering is often represented as a dendrogram, a tree-like diagram that visualizes the merging or splitting of clusters.
+
+```{r}
+dm<-dist(data)
+hc<-hclust(dm, method="complete")
+plot(hc, hang=-1)
+plot(density(dm))
+
+```
+
+-   The spacing between the data points is uneven, with the spacing being greatest at low values (below 2) and then decreasing as the range of values increases.
+-   The density curve is full of peaks, indicating that groups of data may be spaced at specific distances.
+-   The density decreases sharply from a distance of 4, which means that very few pairs of data have a distance of more than 4.
+
+```{r}
+plot(hc,hang=-1)
+x<-rect.hclust(hc, k=5, border=5:7)
+
+# cutting by number of clusters
+clust<-cutree(hc, k=5) # division into 5 clusters
+
+```
+
+```{r}
+install.packages("ClustGeo")
+library(ClustGeo)
+dm<-dist(data) # distances between observations
+hc<-hclust(dm, method="complete") # simple dendrogram
+
+# cutting by number of clusters
+clust.vec.5<-cutree(hc, k=5)
+
+diss.mat<-dm	
+inertion<-matrix(0, nrow=4, ncol=1)
+colnames(inertion)<-"division to 5 clust."
+rownames(inertion)<-c("intra-clust", "total", "percentage", "Q")
+
+inertion[1,1]<-withindiss(diss.mat, part=clust.vec.5)# intra-cluster
+inertion[2,1]<-inertdiss(diss.mat) 				# overall
+inertion[3,1]<-inertion[1,1]/ inertion[2,1]		# ratio
+inertion[4,1]<-1-inertion[3,1]				# Q, inter-cluster
+
+
+options("scipen"=100, "digits"=4)
+inertion
+
+```
+
+The above results show that the division of the data into 5 clusters is of very high quality:
+
+The data points within the same cluster are very homogeneous (low intra-cluster). The clusters are clearly separated from each other (Q is close to 1). The ratio between the intra-cluster tightness and the total distance is very small (low percentage), indicating that this clustering method is suitable and reliable.
+
+```{r}
+fviz_cluster(list(data=data, cluster=clust.vec.5))
+plot(silhouette(clust.vec.5,dm))
+```
+
+Silhouette score: CLARA achieved a higher silhouette score (0.64 vs. 0.61 for HC), indicating that CLARA has a clearer clustering analysis
+
+# Conclusion
+
+The best algorithms in terms of performance are Clara and PAM with the highest Silhouette Scores (0.64 and 0.63). However, hierarchical clustering (with a lower silhouette score - 0.61) provides detailed hierarchical information that helps to explore the relationships between groups of data.The choice of a particular algorithm depends on the needs and purposes of the organization.
