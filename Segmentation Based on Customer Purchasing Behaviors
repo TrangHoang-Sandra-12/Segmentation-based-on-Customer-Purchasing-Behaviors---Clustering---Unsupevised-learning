@@ -24,12 +24,14 @@ Identify the most meaningful and stable customer segments
 The dataset used is sourced from Kaggle – Customer Purchasing Behaviors
 , which includes customer-level attributes such as:
 
-Variable	Description
-Budget	Monthly spending budget
-Frequency	Number of purchases
-Demographics	Customer demographic data
-Income	Annual income
-Loyalty	Loyalty score
+| Variable       | Description                      |
+| -------------- | -------------------------------- |
+| `Budget`       | Monthly spending limit           |
+| `Frequency`    | Purchase frequency               |
+| `Demographics` | Age, gender, or customer profile |
+| `Income`       | Annual income                    |
+| `Loyalty`      | Customer loyalty score           |
+
 
 ⚙️ Methodology
 🔹 1. Data Preparation
@@ -98,11 +100,14 @@ Provides interpretability of relationships between clusters
 Slightly lower silhouette = 0.61
 
 📈 Results Summary
-Algorithm	Optimal k	Silhouette Score	Remarks
-K-Means	9	0.56–0.63	Clear but overlapping clusters
-PAM	6	0.63	Balanced and distinct clusters
-CLARA	5	0.64	Best performance overall
-Hierarchical	5	0.61	Good structure, useful hierarchy
+
+| Algorithm    | Optimal k | Silhouette Score | Remarks                          |
+| ------------ | --------- | ---------------- | -------------------------------- |
+| K-Means      | 9         | 0.56–0.63        | Clear but overlapping clusters   |
+| PAM          | 6         | 0.63             | Balanced and distinct clusters   |
+| CLARA        | 5         | **0.64**         | Best performance overall         |
+| Hierarchical | 5         | 0.61             | Good structure, useful hierarchy |
+
 
 Conclusion:
 
