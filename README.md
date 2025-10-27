@@ -1,8 +1,8 @@
 🧩 Segmentation Based on Customer Purchasing Behaviors
 
-Author: Trang Hoang
-Language: R
-RPubs Report: http://rpubs.com/Trang_Hoang/1262509
+Author: Trang Hoang  
+Language: R  
+RPubs Report: http://rpubs.com/Trang_Hoang/1262509  
 
 📘 Overview
 
